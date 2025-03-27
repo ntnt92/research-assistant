@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-client = openai(api_key=os.getenv("OPENAI_API_KEY"))
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 st.title("Research Assistant")
 
