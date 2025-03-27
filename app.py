@@ -1,28 +1,46 @@
 import streamlit as st
 import openai
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Load API key and Assistant ID from .env file
+openai_api_key = os.getenv("OPENAI_API_KEY")
+assistant_id = os.getenv("ASSISTANT_ID")
 
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Set up OpenAI client
+client = openai.OpenAI(api_key=openai_api_key)
 
 st.title("Research Assistant")
 
-question = st.text_input("Enter your research question:")
+# Chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-if st.button("Ask"):
-    if question:
-        try:
-            response = client.chat.completions.create(  # Notice the change here
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "user", "content": question}
-                ]
-            )
-            answer = response.choices[0].message.content.strip() # And here
-            st.write(answer)
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-    else:
-        st.warning("Please enter a question.")
+# Display chat history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# User input
+if user_input := st.chat_input("Ask me anything about research..."):
+    # Append user message to chat history
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    # Get response from Assistant
+    response = client.beta.threads.create_and_run(
+        assistant_id=assistant_id,
+        thread={"messages": [{"role": "user", "content": user_input}]}
+    )
+
+    # Extract Assistant's reply
+    assistant_reply = response.last_run.output["messages"][-1]["content"]
+
+    # Append Assistant's reply to chat history
+    st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+
+    # Display Assistant's reply
+    with st.chat_message("assistant"):
+        st.markdown(assistant_reply)
