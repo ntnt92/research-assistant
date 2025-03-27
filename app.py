@@ -3,32 +3,26 @@ import openai
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# Get API key and Assistant ID from .env
 openai.api_key = os.getenv("OPENAI_API_KEY")
-ASSISTANT_ID = os.getenv("ASSISTANT_ID")
 
-st.title("🧠 Research Assistant")
-st.write("Ask your AI-powered assistant anything about research!")
+st.title("Research Assistant")
 
-query = st.text_input("Enter your research question:")
+question = st.text_input("Enter your research question:")
 
 if st.button("Ask"):
-    if query:
+    if question:
         try:
-            # Create a new thread and run assistant
-            response = openai.beta.threads.create_and_run(
-                assistant_id=ASSISTANT_ID,
-                thread={"messages": [{"role": "user", "content": query}]}
+            response = openai.chat.completions.create(  # Notice the change here
+                model="gpt-4-1106-preview",
+                messages=[
+                    {"role": "user", "content": question}
+                ]
             )
-
-            # Extract response from OpenAI API
-            assistant_response = response["latest_message"]["content"]
-            st.success(assistant_response)
-
+            answer = response.choices[0].message.content.strip() # And here
+            st.write(answer)
         except Exception as e:
-            st.error(f"Error: {str(e)}")
+            st.error(f"An error occurred: {e}")
     else:
-        st.warning("Please enter a question!")
+        st.warning("Please enter a question.")
